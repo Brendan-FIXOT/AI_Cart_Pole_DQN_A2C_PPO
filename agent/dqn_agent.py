@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 from collections import deque
-from core.common_methods_agent import NeuralNetwork
+from core.model import NeuralNetwork
 from core.common_methods_agent import Common_Methods
 import random
 
@@ -37,7 +37,7 @@ class DQNAgent(Common_Methods):
         else : 
             with torch.no_grad() : # torch.no_grad pour éviter de taper dans la mémoire inutilement (car pas de backward ici)
                 Q_values = self.nn.forward(state) # state déjà passer en tensor
-            action = int(np.argmax(Q_values)) # Pas np.max, car ici on veut l'index (0 ou 1). Besoin du int, sinon action serait un tensor
+            action = int(Q_values.argmax().item()) # Use torch argmax and convert to int
             return action # Pas de rétropropagation tout de suite, car on veut la récompense associé à l'action
         
     def store_transition_dqn(self, state, action, reward, next_state, done) :
@@ -47,12 +47,12 @@ class DQNAgent(Common_Methods):
         batch = random.sample(self.memory, self.batch_size)
         
         states, actions, rewards, next_states, dones = zip(*batch)
-        
-        states = torch.as_tensor(states, dtype=torch.float32, device=self.device)
+
+        states = Common_Methods.preprocess_state(self, states)
         actions = torch.tensor(actions, dtype=torch.int64, device=self.device).unsqueeze(1)
         rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device).unsqueeze(1)
-        next_states = torch.tensor(np.array(next_states), dtype=torch.float32, device=self.device)
         dones = torch.tensor(dones, dtype=torch.float32, device=self.device).unsqueeze(1)
+        next_states = Common_Methods.preprocess_state(self, next_states)
         
         Q_values = self.nn(states).gather(1, actions) # self.nn(states) récupère les Qvalues associés à chaque choix (0 ou 1), ensuite le gather(1, actions) choisi la Qvalues par rapport à l'action choisie
         

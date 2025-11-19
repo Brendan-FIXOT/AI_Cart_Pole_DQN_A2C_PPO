@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from collections import deque
-from core.common_methods_agent import NeuralNetwork
+from core.model import NeuralNetwork
 from core.common_methods_agent import Common_Methods
 import random
 

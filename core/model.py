@@ -25,9 +25,9 @@ class NeuralNetwork(nn.Module):
         else:
             raise ValueError(f"Unknown mode: {self.mode}")
         
-class ConvolutionnalNeuralNetwork(nn.Module):
+class ConvolutionalNeuralNetwork(nn.Module):
     def __init__(self, px=84, hidden_dim=64, output_dim=2, mode="dqn", optimizer=optim.Adam, lr=1e-3):
-        super(ConvolutionnalNeuralNetwork, self).__init__()
+        super(ConvolutionalNeuralNetwork, self).__init__()
         self.mode = mode
         """
         2 convolutional layers for image input (84x84x1)

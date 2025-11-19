@@ -16,8 +16,8 @@ class A2CAgent(Common_Methods):
         else:
             self.device = torch.device("cpu")
         
-        self.actor = actor_nn.to(self.device)
-        self.critic = critic_nn.to(self.device)
+        self.nna = actor_nn.to(self.device)
+        self.nnc = critic_nn.to(self.device)
         self.nna.to(self.device)
         self.nnc.to(self.device)
         self.loss_fct = torch.nn.MSELoss()
@@ -27,12 +27,11 @@ class A2CAgent(Common_Methods):
         self.gamma = gamma
     
     def getaction_a2c(self, state):
-        state = torch.as_tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)  # Ajouter une dimension batch
         probs = self.nna(state)
         dist = torch.distributions.Categorical(probs)
         action = dist.sample()
         log_prob = dist.log_prob(action)
-        value = self.nnc(state)
+        value = self.nnc(state).squeeze()  # squeeze to get scalar value
         return action.item(), log_prob, value
     
     def update_a2c(self, rewards, log_probs, values, bootstrap_value):

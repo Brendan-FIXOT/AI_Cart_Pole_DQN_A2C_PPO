@@ -18,16 +18,15 @@ class Common_Methods :
                
             while not done:
                 if self.algo == "dqn":
-                    s = torch.tensor(state, dtype=torch.float32, device=self.device)
-                    action = self.getaction_dqn(s)
+                    action = self.getaction_dqn(torch.tensor(state, dtype=torch.float32).to(self.device))
                     next_state, reward, done = env.step(action)
-                    next_state_t = torch.tensor(next_state, dtype=torch.float32, device=self.device)
-                    self.store_transition_dqn(s, action, reward, next_state_t, done)
+                    self.store_transition_dqn(state, action, reward, next_state, done)
                     if len(self.memory) > 1000:
                         self.learn_dqn()
                     state = next_state
 
                 elif self.algo == "a2c":
+                    state = self.preprocess_state(state)
                     action, log_prob, value = self.getaction_a2c(state)
                     next_state, reward, done = env.step(action)
 
@@ -39,6 +38,7 @@ class Common_Methods :
                     state = next_state
                     
                 elif self.algo == "ppo":
+                    state = self.preprocess_state(state)
                     action, log_prob, value = self.getaction_ppo(state)
                     next_state, reward, done = env.step(action)
 
@@ -95,10 +95,10 @@ class Common_Methods :
 
             while not done :
                 if self.algo == "dqn" :
-                    s = torch.tensor(state, dtype=torch.float32, device=self.device)
+                    s = self.preprocess_state(state)
                     action = self.getaction_dqn(s)
                 elif self.algo == "a2c" or self.algo == "ppo":
-                    s = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+                    s = self.preprocess_state(state)
                     probs = self.nna(s).squeeze(0).detach().cpu().numpy()
                     action = int(np.argmax(probs))
                 
@@ -131,10 +131,10 @@ class Common_Methods :
             while not done and step < max_steps:
                 render_env.render()
                 if self.algo == "dqn" :
-                    s = torch.tensor(state, dtype=torch.float32)
+                    s = self.preprocess_state(state)
                     action = self.getaction_dqn(s)
                 elif self.algo == "a2c" or self.algo == "ppo":
-                    s = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+                    s = self.preprocess_state(state)
                     probs = self.nna(s).squeeze(0).detach().numpy()
                     action = int(np.argmax(probs))
 
@@ -147,3 +147,25 @@ class Common_Methods :
             
         render_env.close()
         imageio.mimsave(filename, frames, fps=30, loop=0)
+        
+    def preprocess_state(self, state):
+        """
+        Preprocess the state according to its dimensionality (handles 1D, 2D, 3D, and 4D states).
+        """
+        state = np.array(state, dtype=np.float32)
+
+        if state.ndim == 1:
+            return torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+
+        if state.ndim == 2:
+            return torch.tensor(state, dtype=torch.float32, device=self.device)
+
+        if state.ndim == 3:
+            state = np.transpose(state, (2, 0, 1))
+            return torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+
+        if state.ndim == 4:
+            state = np.transpose(state, (0, 3, 1, 2))
+            return torch.tensor(state, dtype=torch.float32, device=self.device)
+
+        raise ValueError(f"Unexpected state shape: {state.shape}")
