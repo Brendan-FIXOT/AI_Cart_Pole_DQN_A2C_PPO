@@ -5,19 +5,20 @@ from core.common_methods_agent import Common_Methods
 import random
 
 class DQNAgent(Common_Methods):
-    def __init__(self, nn, buffer_size, batch_size, epsilon, epsilon_min=0.01, epsilon_max = 0.9, gamma=0.99) :
+    def __init__(self, nn, n_actions, buffer_size, batch_size, epsilon, epsilon_min=0.01, epsilon_max = 0.9, gamma=0.99) :
         super().__init__(algo="dqn")
         if torch.cuda.is_available(): # CUDA NVIDIA
             self.device = torch.device("cuda")
             print(f"CUDA device available: {torch.cuda.get_device_name(0)}")
         elif torch.backends.mps.is_available():  # MAC M1/M2/M3
             self.device = torch.device("mps")
-        #elif torch.version.hip is not None:     # AMD ROCm
-            #self.device = torch.device("hip") # Uniquement sur Linux
+        elif torch.version.hip is not None:
+            self.device = torch.device("hip") # AMD ROCm
         else:
             self.device = torch.device("cpu")
         
         self.nn = nn.to(self.device)
+        self.n_actions = n_actions
         self.epsilon = epsilon  # Probabilité d'exploration initiale
         self.epsilon_min = epsilon_min  # Valeur minimale d'epsilon
         self.epsilon_max = epsilon_max  # Valeur maximale d'epsilon
@@ -26,17 +27,17 @@ class DQNAgent(Common_Methods):
         self.gamma = gamma # Facteur de réduction
         self.loss_fct = torch.nn.MSELoss()
     
-    # ===============================
-    # DQN methods
-    # ===============================
-    
     def getaction_dqn(self, state) :
+        
         if np.random.rand() < self.epsilon :
-            return np.random.choice([0,1]) # exploration
-        else : 
+            return np.random.randint(self.n_actions) # exploration
+        else :
+            # For single state input (cartpole)
+            if state.dim() == 1:
+                state = state.unsqueeze(0)
             with torch.no_grad() : # torch.no_grad pour éviter de taper dans la mémoire inutilement (car pas de backward ici)
                 Q_values = self.nn.forward(state) # state déjà passer en tensor
-            action = int(Q_values.argmax().item()) # Use torch argmax and convert to int
+            action = int(Q_values.argmax(dim=1).item()) # Use torch argmax and convert to int
             return action # Pas de rétropropagation tout de suite, car on veut la récompense associé à l'action
         
     def store_transition_dqn(self, state, action, reward, next_state, done) :
@@ -47,11 +48,12 @@ class DQNAgent(Common_Methods):
         
         states, actions, rewards, next_states, dones = zip(*batch)
 
-        states = Common_Methods.preprocess_state(self, states)
+        states = torch.cat(states, dim=0)
+        next_states = torch.cat(next_states, dim=0)
+        
         actions = torch.tensor(actions, dtype=torch.int64, device=self.device).unsqueeze(1)
         rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device).unsqueeze(1)
         dones = torch.tensor(dones, dtype=torch.float32, device=self.device).unsqueeze(1)
-        next_states = Common_Methods.preprocess_state(self, next_states)
         
         Q_values = self.nn(states).gather(1, actions) # self.nn(states) récupère les Qvalues associés à chaque choix (0 ou 1), ensuite le gather(1, actions) choisi la Qvalues par rapport à l'action choisie
         

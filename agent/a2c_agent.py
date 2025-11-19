@@ -9,8 +9,8 @@ class A2CAgent(Common_Methods):
             print(f"CUDA device available: {torch.cuda.get_device_name(0)}")
         elif torch.backends.mps.is_available():  # MAC M1/M2/M3
             self.device = torch.device("mps")
-        #elif torch.version.hip is not None:     # AMD ROCm
-            #self.device = torch.device("hip") # Uniquement sur Linux
+        elif torch.version.hip is not None:     # AMD ROCm
+            self.device = torch.device("hip") # Uniquement sur Linux
         else:
             self.device = torch.device("cpu")
         

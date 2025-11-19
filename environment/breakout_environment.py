@@ -1,10 +1,12 @@
 import gymnasium as gym
 import cv2
+import ale_py
 import numpy as np
 
 class BreakoutEnv:
     def __init__(self, render_mode=None):
-        self.env = gym.make("Breakout-v4", render_mode=render_mode)
+        gym.register_envs(ale_py)
+        self.env = gym.make("ALE/Breakout-v5", render_mode=render_mode)
         self.observation_space = (84, 84, 1)
         self.action_space = self.env.action_space
 
@@ -16,7 +18,7 @@ class BreakoutEnv:
 
     def reset(self):
         obs, info = self.env.reset()
-        return self.preprocess(obs), info
+        return self.preprocess(obs)
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)

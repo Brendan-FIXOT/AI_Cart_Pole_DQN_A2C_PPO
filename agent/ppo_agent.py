@@ -1,9 +1,6 @@
-import numpy as np
 import torch
 from collections import deque
-from core.model import NeuralNetwork
 from core.common_methods_agent import Common_Methods
-import random
 
 class PPOAgent(Common_Methods):
     def __init__(self, actor_nn, critic_nn, buffer_size=512, batch_size=64, nb_epochs=4, gamma=0.99, clip_value=0.2, lambda_gae=0.95, entropy_bonus=True, shuffle=True):

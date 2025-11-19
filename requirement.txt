@@ -6,3 +6,6 @@ pygame
 imageio
 Pillow
 opencv-python-headless
+gymnasium[atari]
+ale-py
+autorom

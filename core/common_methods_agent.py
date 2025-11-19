@@ -16,12 +16,19 @@ class Common_Methods :
             state = env.reset()
             done = False
                
+            step_count = 0
             while not done:
                 if self.algo == "dqn":
-                    action = self.getaction_dqn(torch.tensor(state, dtype=torch.float32).to(self.device))
+                    state_tensor = self.preprocess_state(state)
+                    action = self.getaction_dqn(state_tensor)
                     next_state, reward, done = env.step(action)
-                    self.store_transition_dqn(state, action, reward, next_state, done)
-                    if len(self.memory) > 1000:
+                    next_state_tensor = self.preprocess_state(next_state)
+                    self.store_transition_dqn(state_tensor, action, reward, next_state_tensor, done)
+                    step_count += 1
+                    # Learn every N steps (4 for CartPole, 16 for breakout), adaptable to state type
+                    is_image = state_tensor.dim() == 4
+                    learn_interval = 4 if not is_image else 16
+                    if len(self.memory) >= self.batch_size and step_count % learn_interval == 0:
                         self.learn_dqn()
                     state = next_state
 
@@ -151,19 +158,29 @@ class Common_Methods :
         """
         Preprocess the state according to its dimensionality (handles 1D, 2D, 3D, and 4D states).
         """
+        # If already a tensor, return as-is
+        if isinstance(state, torch.Tensor):
+            print("State is already a tensor.")
+            return state
+            
         state = np.array(state, dtype=np.float32)
 
         if state.ndim == 1:
+            # CartPole: (4,) -> (1, 4)
             return torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
 
         if state.ndim == 2:
+            # Batch of 1D states: (batch, features)
             return torch.tensor(state, dtype=torch.float32, device=self.device)
 
         if state.ndim == 3:
-            state = np.transpose(state, (2, 0, 1))
+            # Single image: (H, W, C) -> (1, C, H, W) for PyTorch Conv2d
+            # Breakout: (84, 84, 1) -> (1, 1, 84, 84)
+            state = np.transpose(state, (2, 0, 1))  # (C, H, W)
             return torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
 
         if state.ndim == 4:
+            # Batch of images: (batch, H, W, C) -> (batch, C, H, W)
             state = np.transpose(state, (0, 3, 1, 2))
             return torch.tensor(state, dtype=torch.float32, device=self.device)
 

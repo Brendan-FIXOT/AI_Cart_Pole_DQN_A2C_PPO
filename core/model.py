@@ -44,6 +44,7 @@ class ConvolutionalNeuralNetwork(nn.Module):
         self.fc1 = nn.Linear(64 * final_px * final_px, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
+        self.optimizer = optimizer(self.parameters(), lr=lr)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))

@@ -15,8 +15,11 @@ if __name__ == "__main__":
     
     if env_choice == "Breakout":
         env = BreakoutEnv()
+        n_actions = 4
+        px = 84
     elif env_choice == "CartPole":
         env = CartPoleEnv()
+        n_actions = 2
     else:
         print("Environment not recognized.")
         exit()
@@ -26,14 +29,16 @@ if __name__ == "__main__":
     if mode == "dqn":
         if env_choice == "Breakout":
             agent = DQNAgent(
-                ConvolutionalNeuralNetwork(lr=1e-4),
-                buffer_size=10000,
-                batch_size=64,
+                ConvolutionalNeuralNetwork(px=px, output_dim=n_actions, lr=2.5e-4),
+                n_actions=n_actions,
+                buffer_size=50000,
+                batch_size=32,
                 epsilon=0.9
             )
         elif env_choice == "CartPole":
             agent = DQNAgent(
-                NeuralNetwork(lr=1e-4),
+                NeuralNetwork(output_dim=n_actions, lr=1e-4),
+                n_actions=n_actions,
                 buffer_size=10000,
                 batch_size=64,
                 epsilon=0.9
@@ -58,15 +63,13 @@ if __name__ == "__main__":
     elif mode == "a2c":
         if env_choice == "Breakout":
             actor = ConvolutionalNeuralNetwork(
-                input_dim=4,
-                hidden_dim=64,
-                output_dim=2,
+                px=px,
+                output_dim=n_actions,
                 mode="actor",
                 lr=3e-4
             )
             critic = ConvolutionalNeuralNetwork(
-                input_dim=4,
-                hidden_dim=64,
+                px=px,
                 output_dim=1,
                 mode="critic",
                 lr=1e-3
@@ -74,14 +77,12 @@ if __name__ == "__main__":
         elif env_choice == "CartPole":
             actor = NeuralNetwork(
                 input_dim=4,
-                hidden_dim=64,
-                output_dim=2,
+                output_dim=n_actions,
                 mode="actor",
             lr=3e-4
             )
             critic = NeuralNetwork(
                 input_dim=4,
-                hidden_dim=64,
                 output_dim=1,
                 mode="critic",
                 lr=1e-3
@@ -110,15 +111,13 @@ if __name__ == "__main__":
         
         if env_choice == "Breakout":
             actor = ConvolutionalNeuralNetwork(
-                input_dim=4,
-                hidden_dim=64,
-                output_dim=2,
+                px=px,
+                output_dim=n_actions,
                 mode="actor",
                 lr=3e-4
             )
             critic = ConvolutionalNeuralNetwork(
-                input_dim=4,
-                hidden_dim=64,
+                px=px,
                 output_dim=1,
                 mode="critic",
                 lr=1e-3
@@ -126,14 +125,12 @@ if __name__ == "__main__":
         elif env_choice == "CartPole":
             actor = NeuralNetwork(
                 input_dim=4,
-                hidden_dim=64,
-                output_dim=2,
+                output_dim=n_actions,
                 mode="actor",
                 lr=3e-4
             )
             critic = NeuralNetwork(
                 input_dim=4,
-                hidden_dim=64,
                 output_dim=1,
                 mode="critic",
                 lr=1e-3
