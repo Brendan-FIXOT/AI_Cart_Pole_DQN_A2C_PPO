@@ -1,7 +1,4 @@
-import numpy as np
 import torch
-from core.model import NeuralNetwork
-from core.model import ConvolutionalNeuralNetwork
 from core.common_methods_agent import Common_Methods
 
 class A2CAgent(Common_Methods):

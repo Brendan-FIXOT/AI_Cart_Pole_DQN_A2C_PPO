@@ -1,8 +1,6 @@
 import numpy as np
 import torch
-import torch.optim as optim
 from collections import deque
-from core.model import NeuralNetwork
 from core.common_methods_agent import Common_Methods
 import random
 
