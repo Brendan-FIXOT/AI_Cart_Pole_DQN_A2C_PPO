@@ -5,7 +5,7 @@ import numpy as np
 class BreakoutEnv:
     def __init__(self, render_mode=None):
         self.env = gym.make("Breakout-v4", render_mode=render_mode)
-        self.observation_space = (84, 84, 1)   # Image 84x84 en niveaux de gris
+        self.observation_space = (84, 84, 1)
         self.action_space = self.env.action_space
 
     def preprocess(self, obs):
@@ -20,7 +20,8 @@ class BreakoutEnv:
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)
-        return self.preprocess(obs), reward, terminated, truncated, info
+        done = bool(terminated or truncated)
+        return self.preprocess(obs), reward, done
 
     def render(self):
         self.env.render()

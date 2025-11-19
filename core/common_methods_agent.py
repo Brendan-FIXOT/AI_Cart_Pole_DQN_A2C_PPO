@@ -38,7 +38,6 @@ class Common_Methods :
                     state = next_state
                     
                 elif self.algo == "ppo":
-                    state = self.preprocess_state(state)
                     action, log_prob, value = self.getaction_ppo(state)
                     next_state, reward, done = env.step(action)
 

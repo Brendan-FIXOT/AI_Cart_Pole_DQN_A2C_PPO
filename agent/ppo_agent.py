@@ -35,7 +35,7 @@ class PPOAgent(Common_Methods):
         
     @torch.no_grad() # We don't want to compute gradients when selecting actions, because we are not training
     def getaction_ppo(self, state):
-        state = torch.as_tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+        state = Common_Methods.preprocess_state(self, state)
         probs = self.nna(state)
         dist = torch.distributions.Categorical(probs)
         action = dist.sample()
@@ -66,14 +66,14 @@ class PPOAgent(Common_Methods):
     def learn_ppo(self, last_state):        
         states, actions, rewards, dones, old_log_probs, values = zip(*self.memory) # Learning on a complete rollout
 
-        states = torch.as_tensor(states, dtype=torch.float32, device=self.device)
+        states = Common_Methods.preprocess_state(self, states)
         actions = torch.tensor(actions, dtype=torch.int64, device=self.device)
         rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device)
         dones = torch.tensor(dones, dtype=torch.float32, device=self.device) # unsqueeze not needed, already 1D for the compute_gae, dones and rewards are not used in the loss directly
         old_log_probs = torch.stack(old_log_probs).to(self.device)
         values = torch.stack(values).squeeze().to(self.device)
         
-        last_state = torch.as_tensor(last_state, dtype=torch.float32, device=self.device).unsqueeze(0)
+        last_state = Common_Methods.preprocess_state(self, last_state)
         
         with torch.no_grad():
             last_value = self.nnc(last_state).squeeze(-1)

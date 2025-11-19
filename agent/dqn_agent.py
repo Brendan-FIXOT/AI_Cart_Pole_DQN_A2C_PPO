@@ -9,6 +9,7 @@ class DQNAgent(Common_Methods):
         super().__init__(algo="dqn")
         if torch.cuda.is_available(): # CUDA NVIDIA
             self.device = torch.device("cuda")
+            print(f"CUDA device available: {torch.cuda.get_device_name(0)}")
         elif torch.backends.mps.is_available():  # MAC M1/M2/M3
             self.device = torch.device("mps")
         #elif torch.version.hip is not None:     # AMD ROCm
