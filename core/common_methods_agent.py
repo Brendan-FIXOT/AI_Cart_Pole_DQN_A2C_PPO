@@ -1,33 +1,8 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 import numpy as np
 from tqdm import tqdm
 from environment.cartpole_environment import CartPoleEnv
 import imageio
-
-class NeuralNetwork(nn.Module):
-    def __init__(self, input_dim=4, hidden_dim=128, output_dim=2, mode="dqn", optimizer=optim.Adam, lr=1e-3):
-        super(NeuralNetwork, self).__init__()
-        self.mode = mode
-        
-        self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, output_dim)
-        self.optimizer = optimizer(self.parameters(), lr=lr)
-    
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-
-        if self.mode == "dqn" or self.mode == "critic" :
-            return x  # Return raw Q-values // or state values
-        elif self.mode == "actor":
-            return F.softmax(x, dim=-1) # Apply softmax to get action probabilities
-        else:
-            raise ValueError(f"Unknown mode: {self.mode}")
 
 class Common_Methods :
     def __init__(self, algo):
@@ -104,8 +79,6 @@ class Common_Methods :
 
             elif self.algo == "ppo":
                 pass # Nothing to do here
-            
-                
                 
     # ===============================
     # Test methods
