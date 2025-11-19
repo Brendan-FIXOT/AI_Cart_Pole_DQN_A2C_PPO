@@ -1,26 +1,46 @@
 import torch
+from environment.breakout_environment import BreakoutEnv
 from environment.cartpole_environment import CartPoleEnv
 from agent.a2c_agent import A2CAgent
 from agent.dqn_agent import DQNAgent
 from agent.ppo_agent import PPOAgent
-from core.model import NeuralNetwork
+from core.model import ConvolutionalNeuralNetwork, NeuralNetwork
 from core.interface import Interface
 from core.runner import run_pipeline
 
 if __name__ == "__main__":
     interface = Interface()
 
-    env = CartPoleEnv()
+    env_choice = interface.ask_env()
+    
+    if env_choice == "Breakout":
+        env = BreakoutEnv()
+    elif env_choice == "CartPole":
+        env = CartPoleEnv()
+    else:
+        print("Environment not recognized.")
+        exit()
 
     mode = interface.ask_mode()  # "dqn" or "a2c" or "ppo"
 
     if mode == "dqn":
-        agent = DQNAgent(
-            NeuralNetwork(lr=1e-4),
-            buffer_size=10000,
-            batch_size=64,
-            epsilon=0.9
-        )
+        if env_choice == "Breakout":
+            agent = DQNAgent(
+                ConvolutionalNeuralNetwork(lr=1e-4),
+                buffer_size=10000,
+                batch_size=64,
+                epsilon=0.9
+            )
+        elif env_choice == "CartPole":
+            agent = DQNAgent(
+                NeuralNetwork(lr=1e-4),
+                buffer_size=10000,
+                batch_size=64,
+                epsilon=0.9
+            )
+        else:
+            print("Environment not recognized.")
+            exit()
 
         if interface.ask_load_dqn():
             try:
@@ -36,20 +56,39 @@ if __name__ == "__main__":
             interface.episodes = int(input("How many episodes would you like to train the model for? "))
 
     elif mode == "a2c":
-        actor = NeuralNetwork(
-            input_dim=4,
-            hidden_dim=64,
-            output_dim=2,
-            mode="actor",
+        if env_choice == "Breakout":
+            actor = ConvolutionalNeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=2,
+                mode="actor",
+                lr=3e-4
+            )
+            critic = ConvolutionalNeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=1,
+                mode="critic",
+                lr=1e-3
+            )
+        elif env_choice == "CartPole":
+            actor = NeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=2,
+                mode="actor",
             lr=3e-4
-        )
-        critic = NeuralNetwork(
-            input_dim=4,
-            hidden_dim=64,
-            output_dim=1,
-            mode="critic",
-            lr=1e-3
-        )
+            )
+            critic = NeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=1,
+                mode="critic",
+                lr=1e-3
+            )
+        else:
+            print("Environment not recognized.")
+            exit()
 
         agent = A2CAgent(actor_nn=actor, critic_nn=critic)
 
@@ -68,20 +107,40 @@ if __name__ == "__main__":
             interface.episodes = int(input("How many episodes would you like to train the model for? "))
 
     elif mode == "ppo":
-        actor = NeuralNetwork(
-            input_dim=4,
-            hidden_dim=64,
-            output_dim=2,
-            mode="actor",
-            lr=3e-4
-        )
-        critic = NeuralNetwork(
-            input_dim=4,
-            hidden_dim=64,
-            output_dim=1,
-            mode="critic",
-            lr=1e-3
-        )
+        
+        if env_choice == "Breakout":
+            actor = ConvolutionalNeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=2,
+                mode="actor",
+                lr=3e-4
+            )
+            critic = ConvolutionalNeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=1,
+                mode="critic",
+                lr=1e-3
+            )
+        elif env_choice == "CartPole":
+            actor = NeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=2,
+                mode="actor",
+                lr=3e-4
+            )
+            critic = NeuralNetwork(
+                input_dim=4,
+                hidden_dim=64,
+                output_dim=1,
+                mode="critic",
+                lr=1e-3
+            )
+        else:
+            print("Environment not recognized.")
+            exit()
 
         agent = PPOAgent(
             actor_nn=actor,

@@ -38,6 +38,15 @@ class Interface:
 
     def didgraphicfct(self):
         return input("Do you want to create a graphic of the agent's performance? (y/n): ").lower() == 'y'
+    
+    def ask_env(self):
+        user_input = input("Choose the environment - CartPole or Breakout (c/b): ").lower()
+        if user_input == 'b':
+            self.grahic_name = "Breakout"
+            return "Breakout"
+        else:
+            self.grahic_name = "CartPole"
+            return "CartPole"
 
     # ---------------------------
     # DQN
