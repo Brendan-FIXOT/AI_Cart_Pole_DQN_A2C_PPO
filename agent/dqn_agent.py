@@ -7,7 +7,7 @@ from core.common_methods_agent import Common_Methods
 import random
 
 class DQNAgent(Common_Methods):
-    def __init__(self, nn, buffer_size, batch_size, epsilon, epsilon_min=0.01, epsilon_max = 0.9, gamma=0.99, lr=1e-4) :
+    def __init__(self, nn, buffer_size, batch_size, epsilon, epsilon_min=0.01, epsilon_max = 0.9, gamma=0.99) :
         super().__init__(algo="dqn")
         if torch.cuda.is_available(): # CUDA NVIDIA
             self.device = torch.device("cuda")
@@ -17,8 +17,8 @@ class DQNAgent(Common_Methods):
             #self.device = torch.device("hip") # Uniquement sur Linux
         else:
             self.device = torch.device("cpu")
-        self.nn = NeuralNetwork(lr=lr)
-        self.nn.to(self.device)
+        
+        self.nn = nn.to(self.device)
         self.epsilon = epsilon  # Probabilité d'exploration initiale
         self.epsilon_min = epsilon_min  # Valeur minimale d'epsilon
         self.epsilon_max = epsilon_max  # Valeur maximale d'epsilon

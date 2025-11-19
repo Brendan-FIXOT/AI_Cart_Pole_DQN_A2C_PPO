@@ -6,7 +6,7 @@ from core.common_methods_agent import Common_Methods
 import random
 
 class PPOAgent(Common_Methods):
-    def __init__(self, buffer_size=512, batch_size=64, nb_epochs=4, input_dim=4, hidden_dim=128, actor_lr=3e-4, critic_lr=1e-3, gamma=0.99, clip_value=0.2, lambda_gae=0.95, entropy_bonus=True, shuffle=True):
+    def __init__(self, actor_nn, critic_nn, buffer_size=512, batch_size=64, nb_epochs=4, gamma=0.99, clip_value=0.2, lambda_gae=0.95, entropy_bonus=True, shuffle=True):
         super().__init__(algo="ppo")
         if torch.cuda.is_available(): # CUDA NVIDIA
             self.device = torch.device("cuda")
@@ -18,10 +18,8 @@ class PPOAgent(Common_Methods):
         else:
             self.device = torch.device("cpu")
             print("No GPU available, using CPU instead.")
-        self.nna = NeuralNetwork(hidden_dim=hidden_dim, input_dim=input_dim, output_dim=2, mode="actor", lr=actor_lr)
-        self.nnc = NeuralNetwork(hidden_dim=hidden_dim, input_dim=input_dim, output_dim=1, mode="critic", lr=critic_lr)
-        self.nna.to(self.device)
-        self.nnc.to(self.device)
+        self.nna = actor_nn.to(self.device)
+        self.nnc = critic_nn.to(self.device)
         self.loss_fct = torch.nn.MSELoss()
         self.buffer_size = buffer_size
         self.batch_size = batch_size

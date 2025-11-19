@@ -55,7 +55,7 @@ if __name__ == "__main__":
     mode = interface.ask_mode()  # "dqn" or "a2c" or "ppo"
 
     if mode == "dqn":
-        agent = DQNAgent(NeuralNetwork(), buffer_size=10000, batch_size=64, epsilon=0.9)
+        agent = DQNAgent(NeuralNetwork(lr=1e-4), buffer_size=10000, batch_size=64, epsilon=0.9)
 
         if interface.ask_load_dqn():
             try:
@@ -71,7 +71,23 @@ if __name__ == "__main__":
             interface.episodes = int(input("How many episodes would you like to train the model for? "))
 
     elif mode == "a2c":
-        agent = A2CAgent()
+        actor = NeuralNetwork(
+            input_dim=4,
+            hidden_dim=64,
+            output_dim=2,
+            mode="actor"
+            lr=3e-4
+        )
+
+        critic = NeuralNetwork(
+            input_dim=4,
+            hidden_dim=64,
+            output_dim=1,
+            mode="critic"
+            lr=1e-3
+        )
+        
+        agent = A2CAgent(actor_nn=actor, critic_nn=critic)
 
         if interface.ask_load_a2c():
             try:
@@ -88,7 +104,23 @@ if __name__ == "__main__":
             interface.episodes = int(input("How many episodes would you like to train the model for? "))
 
     elif mode == "ppo":
-        agent = PPOAgent(buffer_size=1024, entropy_bonus=False) # Already set to False by default (no need for cartpole)
+        actor = NeuralNetwork(
+            input_dim=4,
+            hidden_dim=64,
+            output_dim=2,
+            mode="actor"
+            lr=3e-4
+        )
+
+        critic = NeuralNetwork(
+            input_dim=4,
+            hidden_dim=64,
+            output_dim=1,
+            mode="critic"
+            lr=1e-3
+        )
+        
+        agent = PPOAgent(actor_nn=actor, critic_nn=critic, buffer_size=1024, entropy_bonus=False) # Already set to False by default (no need for cartpole)
         
         if interface.ask_load_ppo():
             try:
