@@ -12,19 +12,19 @@ class DQNAgent(Common_Methods):
             print(f"CUDA device available: {torch.cuda.get_device_name(0)}")
         elif torch.backends.mps.is_available():  # MAC M1/M2/M3
             self.device = torch.device("mps")
-        elif torch.version.hip is not None:
-            self.device = torch.device("hip") # AMD ROCm
+        #elif torch.version.hip is not None:     # AMD ROCm
+        #    self.device = torch.device("hip") # Only on Linux
         else:
             self.device = torch.device("cpu")
         
         self.nn = nn.to(self.device)
         self.n_actions = n_actions
-        self.epsilon = epsilon  # Probabilité d'exploration initiale
-        self.epsilon_min = epsilon_min  # Valeur minimale d'epsilon
-        self.epsilon_max = epsilon_max  # Valeur maximale d'epsilon
+        self.epsilon = epsilon  # Initial exploration probability
+        self.epsilon_min = epsilon_min  # Minimum epsilon value
+        self.epsilon_max = epsilon_max  # Maximum epsilon value
         self.memory = deque(maxlen=buffer_size)
         self.batch_size = batch_size
-        self.gamma = gamma # Facteur de réduction
+        self.gamma = gamma # Discount factor
         self.loss_fct = torch.nn.MSELoss()
     
     def getaction_dqn(self, state) :
@@ -35,10 +35,10 @@ class DQNAgent(Common_Methods):
             # For single state input (cartpole)
             if state.dim() == 1:
                 state = state.unsqueeze(0)
-            with torch.no_grad() : # torch.no_grad pour éviter de taper dans la mémoire inutilement (car pas de backward ici)
-                Q_values = self.nn.forward(state) # state déjà passer en tensor
+            with torch.no_grad() : # torch.no_grad to avoid unnecessary memory usage (no backward here)
+                Q_values = self.nn.forward(state) # state already converted to tensor
             action = int(Q_values.argmax(dim=1).item()) # Use torch argmax and convert to int
-            return action # Pas de rétropropagation tout de suite, car on veut la récompense associé à l'action
+            return action # No backpropagation yet, as we need the reward associated with the action
         
     def store_transition_dqn(self, state, action, reward, next_state, done) :
         self.memory.append((state, action, reward, next_state, done))
@@ -55,14 +55,14 @@ class DQNAgent(Common_Methods):
         rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device).unsqueeze(1)
         dones = torch.tensor(dones, dtype=torch.float32, device=self.device).unsqueeze(1)
         
-        Q_values = self.nn(states).gather(1, actions) # self.nn(states) récupère les Qvalues associés à chaque choix (0 ou 1), ensuite le gather(1, actions) choisi la Qvalues par rapport à l'action choisie
+        Q_values = self.nn(states).gather(1, actions) # self.nn(states) retrieves Q-values for each choice (0 or 1), then gather(1, actions) selects the Q-value based on the chosen action
         
         with torch.no_grad():
-            max_next_Q = self.nn(next_states).max(1, keepdim=True)[0]  # Meilleure action future (keepdim = True permet de garder la forme (batch_size, 1))
-            Q_targets = rewards + (1 - dones) * self.gamma * max_next_Q # Equation de Bellman calculant la Qvalues cible
+            max_next_Q = self.nn(next_states).max(1, keepdim=True)[0]  # Best future action (keepdim = True maintains shape (batch_size, 1))
+            Q_targets = rewards + (1 - dones) * self.gamma * max_next_Q # Bellman equation calculating target Q-values
             
-        loss = self.loss_fct(Q_targets, Q_values) # Calcul de la perte en fonction des valeurs réelles (Q_values : valeurs prédite par le réseau de neuronne) et des meilleurs valeurs (Q_targets : valeurs maximal calculer avec l'eq de Bellman)
+        loss = self.loss_fct(Q_targets, Q_values) # Loss calculation based on actual values (Q_values: values predicted by neural network) and best values (Q_targets: maximum values calculated with Bellman eq)
         
-        self.nn.optimizer.zero_grad() # Réinitialise les gradients
-        loss.backward() # Rétropropagation
-        self.nn.optimizer.step() # Mise à jour des poids
+        self.nn.optimizer.zero_grad() # Reset gradients
+        loss.backward() # Backpropagation
+        self.nn.optimizer.step() # Weight update

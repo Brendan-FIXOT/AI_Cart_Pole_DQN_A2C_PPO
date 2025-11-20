@@ -11,7 +11,7 @@ class PPOAgent(Common_Methods):
         elif torch.backends.mps.is_available():  # MAC M1/M2/M3
             self.device = torch.device("mps")
         #elif torch.version.hip is not None:     # AMD ROCm
-            #self.device = torch.device("hip") # Uniquement sur Linux
+        #    self.device = torch.device("hip") # Only on Linux
         else:
             self.device = torch.device("cpu")
             print("No GPU available, using CPU instead.")
